@@ -1,6 +1,7 @@
 package com.carrent.view;
 
 import com.carrent.model.Vehicle;
+import com.carrent.model.Motorcycle;
 import com.carrent.model.Rental;
 import com.carrent.service.VehicleService;
 import com.carrent.service.RentalService;
@@ -10,8 +11,11 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.GridPane;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -64,6 +68,7 @@ public class MainViewController {
     @FXML private Button returnButton;
     @FXML private Button refreshButton;
     @FXML private Button clearButton;
+    @FXML private Button addVehicleButton;
     
     // Status Components
     @FXML private Label statusLabel;
@@ -356,6 +361,190 @@ public class MainViewController {
         updateStatus("Form cleared");
     }
     
+    /**
+     * Handle adding new vehicle
+     */
+    @FXML
+    private void handleAddNewVehicle() {
+        try {
+            // Create custom dialog for vehicle input
+            Dialog<Vehicle> dialog = new Dialog<>();
+            dialog.setTitle("Add New Vehicle");
+            dialog.setHeaderText("Enter vehicle details");
+            
+            // Set the button types
+            ButtonType addButtonType = new ButtonType("Add Vehicle", ButtonBar.ButtonData.OK_DONE);
+            dialog.getDialogPane().getButtonTypes().addAll(addButtonType, ButtonType.CANCEL);
+            
+            // Create the form
+            GridPane grid = new GridPane();
+            grid.setHgap(10);
+            grid.setVgap(10);
+            grid.setPadding(new Insets(20, 150, 10, 10));
+            
+            TextField idField = new TextField();
+            idField.setPromptText("Vehicle ID (e.g., V001)");
+            TextField makeField = new TextField();
+            makeField.setPromptText("Make (e.g., Toyota)");
+            TextField modelField = new TextField();
+            modelField.setPromptText("Model (e.g., Camry)");
+            TextField dailyRateField = new TextField();
+            dailyRateField.setPromptText("Daily Rate (e.g., 45.99)");
+            
+            // Vehicle type selection
+            ComboBox<String> vehicleTypeCombo = new ComboBox<>();
+            vehicleTypeCombo.getItems().addAll("Regular Vehicle", "Motorcycle");
+            vehicleTypeCombo.setValue("Regular Vehicle");
+            
+            // Motorcycle specific fields (initially hidden)
+            TextField engineSizeField = new TextField();
+            engineSizeField.setPromptText("Engine Size (CC)");
+            TextField motorcycleTypeField = new TextField();
+            motorcycleTypeField.setPromptText("Type (Sport, Cruiser, etc.)");
+            CheckBox hasLuggageBox = new CheckBox("Has Luggage Capacity");
+            CheckBox hasSidecarBox = new CheckBox("Has Sidecar");
+            TextField passengerCapacityField = new TextField();
+            passengerCapacityField.setPromptText("Passenger Capacity");
+            passengerCapacityField.setText("2"); // Default for motorcycles
+            
+            // Initially hide motorcycle fields
+            engineSizeField.setVisible(false);
+            motorcycleTypeField.setVisible(false);
+            hasLuggageBox.setVisible(false);
+            hasSidecarBox.setVisible(false);
+            passengerCapacityField.setVisible(false);
+            
+            // Show/hide motorcycle fields based on selection
+            vehicleTypeCombo.setOnAction(e -> {
+                boolean isMotorcycle = "Motorcycle".equals(vehicleTypeCombo.getValue());
+                engineSizeField.setVisible(isMotorcycle);
+                motorcycleTypeField.setVisible(isMotorcycle);
+                hasLuggageBox.setVisible(isMotorcycle);
+                hasSidecarBox.setVisible(isMotorcycle);
+                passengerCapacityField.setVisible(isMotorcycle);
+                
+                // Adjust dialog size
+                dialog.getDialogPane().autosize();
+            });
+            
+            grid.add(new Label("Vehicle ID:"), 0, 0);
+            grid.add(idField, 1, 0);
+            grid.add(new Label("Make:"), 0, 1);
+            grid.add(makeField, 1, 1);
+            grid.add(new Label("Model:"), 0, 2);
+            grid.add(modelField, 1, 2);
+            grid.add(new Label("Daily Rate ($):"), 0, 3);
+            grid.add(dailyRateField, 1, 3);
+            grid.add(new Label("Vehicle Type:"), 0, 4);
+            grid.add(vehicleTypeCombo, 1, 4);
+            
+            // Motorcycle-specific fields
+            grid.add(new Label("Engine Size (CC):"), 0, 5);
+            grid.add(engineSizeField, 1, 5);
+            grid.add(new Label("Motorcycle Type:"), 0, 6);
+            grid.add(motorcycleTypeField, 1, 6);
+            grid.add(new Label("Passenger Capacity:"), 0, 7);
+            grid.add(passengerCapacityField, 1, 7);
+            grid.add(hasLuggageBox, 1, 8);
+            grid.add(hasSidecarBox, 1, 9);
+            
+            dialog.getDialogPane().setContent(grid);
+            
+            // Enable/Disable add button depending on whether required fields are filled
+            Node addButton = dialog.getDialogPane().lookupButton(addButtonType);
+            addButton.setDisable(true);
+            
+            // Validation
+            Runnable validateForm = () -> {
+                boolean validBasic = !idField.getText().trim().isEmpty() && 
+                                   !makeField.getText().trim().isEmpty() && 
+                                   !modelField.getText().trim().isEmpty() && 
+                                   !dailyRateField.getText().trim().isEmpty();
+                
+                boolean validMotorcycle = true;
+                if ("Motorcycle".equals(vehicleTypeCombo.getValue())) {
+                    validMotorcycle = !engineSizeField.getText().trim().isEmpty() && 
+                                    !motorcycleTypeField.getText().trim().isEmpty() &&
+                                    !passengerCapacityField.getText().trim().isEmpty();
+                }
+                
+                addButton.setDisable(!(validBasic && validMotorcycle));
+            };
+            
+            // Add listeners for validation
+            idField.textProperty().addListener((observable, oldValue, newValue) -> validateForm.run());
+            makeField.textProperty().addListener((observable, oldValue, newValue) -> validateForm.run());
+            modelField.textProperty().addListener((observable, oldValue, newValue) -> validateForm.run());
+            dailyRateField.textProperty().addListener((observable, oldValue, newValue) -> validateForm.run());
+            vehicleTypeCombo.valueProperty().addListener((observable, oldValue, newValue) -> validateForm.run());
+            engineSizeField.textProperty().addListener((observable, oldValue, newValue) -> validateForm.run());
+            motorcycleTypeField.textProperty().addListener((observable, oldValue, newValue) -> validateForm.run());
+            passengerCapacityField.textProperty().addListener((observable, oldValue, newValue) -> validateForm.run());
+            
+            // Convert the result when the add button is clicked
+            dialog.setResultConverter(dialogButton -> {
+                if (dialogButton == addButtonType) {
+                    try {
+                        String id = idField.getText().trim();
+                        String make = makeField.getText().trim();
+                        String model = modelField.getText().trim();
+                        double dailyRate = Double.parseDouble(dailyRateField.getText().trim());
+                        
+                        // Check if vehicle ID already exists
+                        if (vehicleService.findVehicleById(id) != null) {
+                            Platform.runLater(() -> showError("Duplicate ID", 
+                                "A vehicle with ID '" + id + "' already exists. Please use a different ID."));
+                            return null;
+                        }
+                        
+                        if ("Motorcycle".equals(vehicleTypeCombo.getValue())) {
+                            // Create motorcycle
+                            int engineSize = Integer.parseInt(engineSizeField.getText().trim());
+                            String motorcycleType = motorcycleTypeField.getText().trim();
+                            int passengerCapacity = Integer.parseInt(passengerCapacityField.getText().trim());
+                            
+                            Motorcycle motorcycle = new Motorcycle(id, make, model, dailyRate, engineSize, motorcycleType);
+                            motorcycle.setHasLuggage(hasLuggageBox.isSelected());
+                            motorcycle.setHasSidecar(hasSidecarBox.isSelected());
+                            motorcycle.setPassengerCapacity(passengerCapacity);
+                            
+                            return motorcycle;
+                        } else {
+                            // Create regular vehicle
+                            return new Vehicle(id, make, model, dailyRate);
+                        }
+                        
+                    } catch (NumberFormatException e) {
+                        Platform.runLater(() -> showError("Invalid Input", 
+                            "Please enter valid numeric values for daily rate, engine size, and passenger capacity."));
+                        return null;
+                    }
+                }
+                return null;
+            });
+            
+            Optional<Vehicle> result = dialog.showAndWait();
+            
+            result.ifPresent(vehicle -> {
+                // Add vehicle using service
+                if (vehicleService.addVehicle(vehicle)) {
+                    showInfo("Vehicle Added", 
+                        String.format("Vehicle %s (%s %s) has been added successfully!", 
+                            vehicle.getId(), vehicle.getMake(), vehicle.getModel()));
+                    
+                    // Refresh data
+                    loadData();
+                    updateStatus("New vehicle added successfully");
+                } else {
+                    showError("Add Failed", "Failed to add the vehicle. Please try again.");
+                }
+            });
+            
+        } catch (Exception e) {
+            showError("Error", "An error occurred while adding the vehicle: " + e.getMessage());
+        }
+    }
+
     /**
      * Update UI state
      */
