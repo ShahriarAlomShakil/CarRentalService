@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<!-- 
+    Main View FXML for Car Rental Application
+    This is a placeholder layout that will be fully designed in Phase 3
+    
+    For Phase 1, this provides basic structure for testing
+-->
+
+<VBox xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" 
+      fx:controller="com.carrent.view.MainViewController">
+   <children>
+      <!-- Title Bar -->
+      <Label text="Car Rental System - Phase 1 Complete" 
+             style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-padding: 20px;" />
+      
+      <!-- Placeholder content -->
+      <Label text="✅ Project Structure Created" 
+             style="-fx-font-size: 16px; -fx-padding: 10px;" />
+      <Label text="✅ Maven Configuration Complete" 
+             style="-fx-font-size: 16px; -fx-padding: 10px;" />
+      <Label text="✅ Model Classes (Vehicle, Rental, Customer)" 
+             style="-fx-font-size: 16px; -fx-padding: 10px;" />
+      <Label text="✅ Service Layer (VehicleService, RentalService)" 
+             style="-fx-font-size: 16px; -fx-padding: 10px;" />
+      <Label text="✅ Repository Layer (VehicleRepository, RentalRepository)" 
+             style="-fx-font-size: 16px; -fx-padding: 10px;" />
+      <Label text="✅ Sample Data Files (vehicles.csv, rentals.csv)" 
+             style="-fx-font-size: 16px; -fx-padding: 10px;" />
+      
+      <Label text="Phase 2: Implement business logic and data access" 
+             style="-fx-font-size: 14px; -fx-padding: 20px; -fx-text-fill: blue;" />
+   </children>
+</VBox>

@@ -1,0 +1,6 @@
+ID,Make,Model,DailyRate,IsAvailable
+V001,Toyota,Corolla,29.00,true
+V002,Honda,Civic,38.00,true
+V003,Toyota,Camry,42.00,false
+V004,Ford,Explorer,68.00,true
+V005,BMW,3Series,95.00,true
