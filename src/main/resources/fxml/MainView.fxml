@@ -1,37 +1,140 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
 <!-- 
-    Main View FXML for Car Rental Application
-    This is a placeholder layout that will be fully designed in Phase 3
-    
-    For Phase 1, this provides basic structure for testing
+    Main View FXML for Car Rental Application - Phase 3 Implementation
+    Complete UI design with TableView, forms, and buttons
 -->
 
-<VBox xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" 
-      fx:controller="com.carrent.view.MainViewController">
-   <children>
-      <!-- Title Bar -->
-      <Label text="Car Rental System - Phase 1 Complete" 
-             style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-padding: 20px;" />
-      
-      <!-- Placeholder content -->
-      <Label text="✅ Project Structure Created" 
-             style="-fx-font-size: 16px; -fx-padding: 10px;" />
-      <Label text="✅ Maven Configuration Complete" 
-             style="-fx-font-size: 16px; -fx-padding: 10px;" />
-      <Label text="✅ Model Classes (Vehicle, Rental, Customer)" 
-             style="-fx-font-size: 16px; -fx-padding: 10px;" />
-      <Label text="✅ Service Layer (VehicleService, RentalService)" 
-             style="-fx-font-size: 16px; -fx-padding: 10px;" />
-      <Label text="✅ Repository Layer (VehicleRepository, RentalRepository)" 
-             style="-fx-font-size: 16px; -fx-padding: 10px;" />
-      <Label text="✅ Sample Data Files (vehicles.csv, rentals.csv)" 
-             style="-fx-font-size: 16px; -fx-padding: 10px;" />
-      
-      <Label text="Phase 2: Implement business logic and data access" 
-             style="-fx-font-size: 14px; -fx-padding: 20px; -fx-text-fill: blue;" />
-   </children>
-</VBox>
+<BorderPane xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" 
+            fx:controller="com.carrent.view.MainViewController"
+            prefHeight="700.0" prefWidth="1000.0" minHeight="400.0" minWidth="800.0">
+
+   <!-- Top: Application Title -->
+   <top>
+      <VBox style="-fx-background-color: #2c3e50; -fx-padding: 15;">
+         <Label text="Car Rental System" 
+                style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: white;" />
+         <Label text="Manage vehicle rentals and returns"
+                style="-fx-font-size: 14px; -fx-text-fill: #bdc3c7;" />
+      </VBox>
+   </top>
+
+   <!-- Center: Main Content -->
+   <center>
+      <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" pannable="true" 
+                  prefViewportHeight="600.0" prefViewportWidth="960.0">
+         <content>
+            <VBox spacing="15.0" fillWidth="true" prefWidth="960.0">
+               <padding>
+                  <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+               </padding>
+
+         <!-- Vehicle List Section -->
+         <VBox spacing="10.0">
+            <Label text="Available Vehicles" 
+                   style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" />
+            
+            <!-- Vehicle Table -->
+            <TableView fx:id="vehicleTable" prefHeight="300.0" VBox.vgrow="SOMETIMES">
+               <columns>
+                  <TableColumn fx:id="idColumn" prefWidth="80.0" text="ID" />
+                  <TableColumn fx:id="makeColumn" prefWidth="120.0" text="Make" />
+                  <TableColumn fx:id="modelColumn" prefWidth="120.0" text="Model" />
+                  <TableColumn fx:id="dailyRateColumn" prefWidth="100.0" text="Daily Rate" />
+                  <TableColumn fx:id="statusColumn" prefWidth="100.0" text="Status" />
+               </columns>
+            </TableView>
+         </VBox>
+
+         <!-- Rental Operations Section -->
+         <VBox spacing="15.0" style="-fx-background-color: #ecf0f1; -fx-padding: 20; -fx-background-radius: 5;">
+            <Label text="Rental Operations" 
+                   style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" />
+            
+            <!-- Customer Information -->
+            <HBox spacing="15.0" alignment="CENTER_LEFT">
+               <Label text="Customer Name:" minWidth="120.0" 
+                      style="-fx-font-weight: bold;" />
+               <TextField fx:id="customerNameField" prefWidth="200.0" 
+                         promptText="Enter customer name" />
+               
+               <Label text="Phone:" minWidth="60.0" 
+                      style="-fx-font-weight: bold;" />
+               <TextField fx:id="customerPhoneField" prefWidth="150.0" 
+                         promptText="Enter phone number" />
+            </HBox>
+            
+            <!-- Date Selection -->
+            <HBox spacing="15.0" alignment="CENTER_LEFT">
+               <Label text="Start Date:" minWidth="120.0" 
+                      style="-fx-font-weight: bold;" />
+               <DatePicker fx:id="startDatePicker" prefWidth="150.0" />
+               
+               <Label text="End Date:" minWidth="80.0" 
+                      style="-fx-font-weight: bold;" />
+               <DatePicker fx:id="endDatePicker" prefWidth="150.0" />
+               
+               <Label fx:id="costLabel" text="Total Cost: $0.00" 
+                      style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #27ae60;" />
+            </HBox>
+            
+            <!-- Action Buttons -->
+            <HBox spacing="15.0" alignment="CENTER_LEFT">
+               <Button fx:id="rentButton" text="Rent Vehicle" 
+                       onAction="#handleRentVehicle"
+                       style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20;" />
+               
+               <Button fx:id="returnButton" text="Return Vehicle" 
+                       onAction="#handleReturnVehicle"
+                       style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20;" />
+               
+               <Button fx:id="refreshButton" text="Refresh Data" 
+                       onAction="#handleRefreshData"
+                       style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20;" />
+               
+               <Button fx:id="clearButton" text="Clear Form" 
+                       onAction="#handleClearForm"
+                       style="-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20;" />
+            </HBox>
+         </VBox>
+
+         <!-- Active Rentals Section -->
+         <VBox spacing="10.0">
+            <Label text="Active Rentals" 
+                   style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" />
+            
+            <!-- Active Rentals Table -->
+            <TableView fx:id="activeRentalsTable" prefHeight="150.0" VBox.vgrow="SOMETIMES">
+               <columns>
+                  <TableColumn fx:id="rentalIdColumn" prefWidth="80.0" text="Rental ID" />
+                  <TableColumn fx:id="rentalVehicleColumn" prefWidth="100.0" text="Vehicle" />
+                  <TableColumn fx:id="rentalCustomerColumn" prefWidth="150.0" text="Customer" />
+                  <TableColumn fx:id="rentalStartColumn" prefWidth="100.0" text="Start Date" />
+                  <TableColumn fx:id="rentalEndColumn" prefWidth="100.0" text="End Date" />
+                  <TableColumn fx:id="rentalCostColumn" prefWidth="100.0" text="Total Cost" />
+               </columns>
+            </TableView>
+         </VBox>
+            </VBox>
+         </content>
+      </ScrollPane>
+   </center>
+
+   <!-- Bottom: Status Bar -->
+   <bottom>
+      <HBox style="-fx-background-color: #34495e; -fx-padding: 10;">
+         <Label fx:id="statusLabel" text="Ready - Select a vehicle to rent" 
+                style="-fx-text-fill: white; -fx-font-size: 12px;" />
+         
+         <Region HBox.hgrow="ALWAYS" />
+         
+         <Label fx:id="vehicleCountLabel" text="Vehicles: 0" 
+                style="-fx-text-fill: #bdc3c7; -fx-font-size: 12px;" />
+      </HBox>
+   </bottom>
+
+</BorderPane>
