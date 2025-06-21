@@ -75,37 +75,50 @@ public class VehicleService {
         Vehicle vehicle = findVehicleById(vehicleId);
         return vehicle != null && vehicle.isAvailable();
     }
-    
-    /**
+      /**
      * Rent a vehicle (mark as not available)
      * 
      * @param vehicleId vehicle ID to rent
      * @return true if successfully rented, false otherwise
      */
     public boolean rentVehicle(String vehicleId) {
+        System.out.println("VehicleService: Attempting to rent vehicle: " + vehicleId);
         Vehicle vehicle = findVehicleById(vehicleId);
-        if (vehicle == null || !vehicle.isAvailable()) {
+        if (vehicle == null) {
+            System.out.println("VehicleService: Vehicle not found: " + vehicleId);
             return false;
         }
         
+        if (!vehicle.isAvailable()) {
+            System.out.println("VehicleService: Vehicle is not available: " + vehicleId);
+            return false;
+        }
+        
+        System.out.println("VehicleService: Setting vehicle as unavailable: " + vehicleId);
         vehicle.setAvailable(false);
-        return vehicleRepository.update(vehicle);
+        boolean success = vehicleRepository.update(vehicle);
+        System.out.println("VehicleService: Update result for vehicle " + vehicleId + ": " + success);
+        return success;
     }
-    
-    /**
+      /**
      * Return a vehicle (mark as available)
      * 
      * @param vehicleId vehicle ID to return
      * @return true if successfully returned, false otherwise
      */
     public boolean returnVehicle(String vehicleId) {
+        System.out.println("VehicleService: Attempting to return vehicle: " + vehicleId);
         Vehicle vehicle = findVehicleById(vehicleId);
         if (vehicle == null) {
+            System.out.println("VehicleService: Vehicle not found: " + vehicleId);
             return false;
         }
         
+        System.out.println("VehicleService: Setting vehicle as available: " + vehicleId);
         vehicle.setAvailable(true);
-        return vehicleRepository.update(vehicle);
+        boolean success = vehicleRepository.update(vehicle);
+        System.out.println("VehicleService: Update result for vehicle " + vehicleId + ": " + success);
+        return success;
     }
     
     /**

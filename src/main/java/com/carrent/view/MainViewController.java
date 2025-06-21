@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Main View Controller for the Car Rental Application - Phase 3 Implementation
+ * Main View Controller for the Car Rental Application
  * 
  * This controller manages the complete UI functionality including:
  * - Vehicle display and selection
@@ -76,34 +76,61 @@ public class MainViewController {
     
     // Data
     private ObservableList<Vehicle> vehicleList = FXCollections.observableArrayList();
-    private ObservableList<Rental> activeRentalsList = FXCollections.observableArrayList();
-    
-    /**
+    private ObservableList<Rental> activeRentalsList = FXCollections.observableArrayList();    /**
      * Initialize method called by JavaFX after loading FXML
      */
     @FXML
     private void initialize() {
-        // Initialize services
-        this.vehicleService = new VehicleService();
-        this.rentalService = new RentalService();
-        
-        // Setup table columns
-        setupVehicleTable();
-        setupActiveRentalsTable();
-        
-        // Setup event handlers
-        setupEventHandlers();
-        
-        // Load initial data
-        loadData();
-        
-        // Set initial state
-        updateUI();
-        
-        updateStatus("Application initialized successfully");
+        try {
+            System.out.println("MainViewController: Starting initialization...");
+              // Initialize services
+            System.out.println("MainViewController: Initializing services...");
+            try {
+                this.vehicleService = new VehicleService();
+                System.out.println("MainViewController: VehicleService initialized successfully");
+            } catch (Exception e) {
+                System.err.println("Error initializing VehicleService: " + e.getMessage());
+                e.printStackTrace();
+                this.vehicleService = null;
+            }
+            
+            try {
+                // Pass the same vehicleService instance to RentalService to avoid multiple instances
+                this.rentalService = new RentalService(new com.carrent.repository.RentalRepository(), this.vehicleService);
+                System.out.println("MainViewController: RentalService initialized successfully");
+            } catch (Exception e) {
+                System.err.println("Error initializing RentalService: " + e.getMessage());
+                e.printStackTrace();
+                this.rentalService = null;
+            }
+            
+            // Setup table columns
+            System.out.println("MainViewController: Setting up tables...");
+            setupVehicleTable();
+            setupActiveRentalsTable();
+            
+            // Setup event handlers
+            System.out.println("MainViewController: Setting up event handlers...");
+            setupEventHandlers();
+            
+            // Load initial data
+            System.out.println("MainViewController: Loading data...");
+            loadData();
+            
+            // Set initial state
+            System.out.println("MainViewController: Updating UI...");
+            updateUI();
+            
+            updateStatus("Application initialized successfully");
+            System.out.println("MainViewController: Initialization complete!");
+            
+        } catch (Exception e) {
+            System.err.println("Error during MainViewController initialization: " + e.getMessage());
+            e.printStackTrace();
+            updateStatus("Error during initialization: " + e.getMessage());
+        }
     }
-    
-    /**
+      /**
      * Setup vehicle table columns and data binding
      */
     private void setupVehicleTable() {
@@ -115,11 +142,19 @@ public class MainViewController {
         dailyRateColumn.setCellValueFactory(cellData -> 
             new SimpleStringProperty(String.format("$%.2f", cellData.getValue().getDailyRate())));
         
-        // Custom cell value factory for status
-        statusColumn.setCellValueFactory(cellData -> 
-            new SimpleStringProperty(cellData.getValue().isAvailable() ? "Available" : "Rented"));
+        // Custom cell value factory for status - use observable properties for better refresh
+        statusColumn.setCellValueFactory(cellData -> {
+            Vehicle vehicle = cellData.getValue();
+            return new SimpleStringProperty(vehicle.isAvailable() ? "Available" : "Rented");
+        });
         
         vehicleTable.setItems(vehicleList);
+        
+        // Add selection listener that properly updates button states
+        vehicleTable.getSelectionModel().selectedItemProperty().addListener(
+            (observable, oldValue, newValue) -> {
+                Platform.runLater(() -> handleVehicleSelection(newValue));
+            });
     }
     
     /**
@@ -140,15 +175,10 @@ public class MainViewController {
         
         activeRentalsTable.setItems(activeRentalsList);
     }
-    
-    /**
+      /**
      * Setup event handlers for UI interactions
      */
     private void setupEventHandlers() {
-        // Vehicle selection handler
-        vehicleTable.getSelectionModel().selectedItemProperty().addListener(
-            (observable, oldValue, newValue) -> handleVehicleSelection(newValue));
-        
         // Date picker change handlers for cost calculation
         startDatePicker.valueProperty().addListener((observable, oldValue, newValue) -> calculateCost());
         endDatePicker.valueProperty().addListener((observable, oldValue, newValue) -> calculateCost());
@@ -156,26 +186,44 @@ public class MainViewController {
         // Active rental selection handler
         activeRentalsTable.getSelectionModel().selectedItemProperty().addListener(
             (observable, oldValue, newValue) -> handleActiveRentalSelection(newValue));
-    }
-    
-    /**
+    }/**
      * Load data from services
      */
     private void loadData() {
-        try {
+        try {            // Ensure services are initialized
+            if (vehicleService == null) {
+                System.out.println("MainViewController: VehicleService is null, reinitializing...");
+                vehicleService = new VehicleService();
+            }
+            if (rentalService == null) {
+                System.out.println("MainViewController: RentalService is null, reinitializing...");
+                rentalService = new RentalService(new com.carrent.repository.RentalRepository(), vehicleService);
+            }
+            
             // Load vehicles
             List<Vehicle> vehicles = vehicleService.getAllVehicles();
             vehicleList.clear();
             vehicleList.addAll(vehicles);
+            
+            // Force table refresh to update cell values
+            refreshVehicleTable();
             
             // Load active rentals
             List<Rental> activeRentals = rentalService.getActiveRentals();
             activeRentalsList.clear();
             activeRentalsList.addAll(activeRentals);
             
+            // Force active rentals table refresh
+            Platform.runLater(() -> {
+                activeRentalsTable.refresh();
+                activeRentalsTable.sort();
+            });
+            
             updateVehicleCount();
             updateStatus("Data loaded successfully");
         } catch (Exception e) {
+            System.err.println("Error loading data: " + e.getMessage());
+            e.printStackTrace();
             showError("Error loading data", e.getMessage());
         }
     }
@@ -279,20 +327,33 @@ public class MainViewController {
             if (startDate.isBefore(LocalDate.now())) {
                 showWarning("Invalid Start Date", "Start date cannot be in the past.");
                 return;
-            }
-            
-            // Create rental
+            }            // Create rental
             Rental rental = rentalService.createRental(
                 selectedVehicle.getId(), customerName, customerPhone, startDate, endDate);
             
-            // Show confirmation
-            showInfo("Rental Created", 
-                String.format("Rental %s created successfully!\nTotal Cost: $%.2f", 
-                    rental.getId(), rental.getTotalCost()));
-            
-            // Refresh data and clear form
-            loadData();
-            handleClearForm();
+            if (rental != null) {
+                // Show confirmation
+                showInfo("Rental Created", 
+                    String.format("Rental %s created successfully!\nTotal Cost: $%.2f", 
+                        rental.getId(), rental.getTotalCost()));
+                
+                // Refresh data and clear form
+                loadData();
+                handleClearForm();
+                
+                // Update UI state
+                updateUI();
+                
+                // Additional verification - check if vehicle status actually changed
+                Vehicle updatedVehicle = vehicleService.findVehicleById(selectedVehicle.getId());
+                if (updatedVehicle != null && updatedVehicle.isAvailable()) {
+                    updateStatus("Warning: Vehicle status may not have been updated properly");
+                } else {
+                    updateStatus("Rental created and vehicle status updated successfully");
+                }
+            } else {
+                showError("Rental Failed", "Failed to create rental. Please check vehicle availability and try again.");
+            }
             
         } catch (Exception e) {
             showError("Rental Error", "Failed to create rental: " + e.getMessage());
@@ -315,32 +376,63 @@ public class MainViewController {
             // Confirm return
             Optional<ButtonType> result = showConfirmation("Confirm Return", 
                 String.format("Return vehicle for rental %s?\nCustomer: %s", 
-                    selectedRental.getId(), selectedRental.getCustomerName()));
-            
-            if (result.isPresent() && result.get() == ButtonType.OK) {
+                    selectedRental.getId(), selectedRental.getCustomerName()));            if (result.isPresent() && result.get() == ButtonType.OK) {
                 // Complete rental
-                rentalService.completeRental(selectedRental.getId());
+                boolean success = rentalService.completeRental(selectedRental.getId());
                 
-                showInfo("Vehicle Returned", 
-                    String.format("Vehicle returned successfully!\nRental %s completed.", 
-                        selectedRental.getId()));
-                
-                // Refresh data
-                loadData();
+                if (success) {
+                    showInfo("Vehicle Returned", 
+                        String.format("Vehicle returned successfully!\nRental %s completed.", 
+                            selectedRental.getId()));
+                    
+                    // Refresh data
+                    loadData();
+                    
+                    // Update UI state
+                    updateUI();
+                    
+                    // Additional verification - check if vehicle status actually changed
+                    Vehicle updatedVehicle = vehicleService.findVehicleById(selectedRental.getVehicleId());
+                    if (updatedVehicle != null && !updatedVehicle.isAvailable()) {
+                        updateStatus("Warning: Vehicle status may not have been updated properly");
+                    } else {
+                        updateStatus("Vehicle returned and status updated successfully");
+                    }
+                } else {
+                    showError("Return Failed", "Failed to return vehicle. Please try again.");
+                }
             }
             
         } catch (Exception e) {
             showError("Return Error", "Failed to return vehicle: " + e.getMessage());
         }
     }
-    
-    /**
+      /**
      * Handle data refresh
      */
     @FXML
     private void handleRefreshData() {
-        loadData();
-        updateStatus("Data refreshed successfully");
+        try {
+            System.out.println("MainViewController: Refreshing data...");
+              // Ensure services are initialized before loading data
+            if (vehicleService == null) {
+                System.out.println("MainViewController: VehicleService is null during refresh, reinitializing...");
+                vehicleService = new VehicleService();
+            }
+            if (rentalService == null) {
+                System.out.println("MainViewController: RentalService is null during refresh, reinitializing...");
+                rentalService = new RentalService(new com.carrent.repository.RentalRepository(), vehicleService);
+            }
+            
+            loadData();
+            updateStatus("Data refreshed successfully");
+            System.out.println("MainViewController: Data refresh completed successfully");
+        } catch (Exception e) {
+            System.err.println("Error during data refresh: " + e.getMessage());
+            e.printStackTrace();
+            updateStatus("Error refreshing data: " + e.getMessage());
+            showError("Refresh Error", "Failed to refresh data: " + e.getMessage());
+        }
     }
     
     /**
@@ -552,15 +644,29 @@ public class MainViewController {
         rentButton.setDisable(true);
         returnButton.setDisable(true);
     }
-    
-    /**
+      /**
      * Update vehicle count display
      */
     private void updateVehicleCount() {
-        int totalVehicles = vehicleList.size();
-        long availableVehicles = vehicleList.stream().mapToLong(v -> v.isAvailable() ? 1 : 0).sum();
-        vehicleCountLabel.setText(String.format("Vehicles: %d total, %d available", 
-            totalVehicles, availableVehicles));
+        Platform.runLater(() -> {
+            int totalVehicles = vehicleList.size();
+            long availableVehicles = vehicleList.stream().mapToLong(v -> v.isAvailable() ? 1 : 0).sum();
+            vehicleCountLabel.setText(String.format("Vehicles: %d total, %d available", 
+                totalVehicles, availableVehicles));
+        });
+    }
+    
+    /**
+     * Force refresh of vehicle table display
+     */
+    private void refreshVehicleTable() {
+        Platform.runLater(() -> {
+            // Force refresh of table columns that depend on vehicle state
+            vehicleTable.getColumns().get(4).setVisible(false);
+            vehicleTable.getColumns().get(4).setVisible(true);
+            vehicleTable.refresh();
+            vehicleTable.sort();
+        });
     }
     
     /**

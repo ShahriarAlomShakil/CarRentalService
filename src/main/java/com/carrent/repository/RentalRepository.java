@@ -67,9 +67,7 @@ public class RentalRepository {
         } catch (IOException | URISyntaxException e) {
             System.err.println("Error loading rentals from file: " + e.getMessage());
         }
-    }
-    
-    /**
+    }    /**
      * Parse a rental from CSV line
      */
     private Rental parseRentalFromCsv(String csvLine) {
@@ -84,11 +82,18 @@ public class RentalRepository {
                 LocalDate endDate = LocalDate.parse(parts[5].trim(), DATE_FORMATTER);
                 double totalCost = Double.parseDouble(parts[6].trim());
                 
-                Rental rental = new Rental(id, vehicleId, customerName, customerPhone, startDate, endDate);
+                // Use constructor that doesn't validate for new rentals when loading existing data
+                Rental rental = new Rental(id, vehicleId, customerName, customerPhone, startDate, endDate, false);
                 rental.setTotalCost(totalCost);
                 
-                // Check if rental is still active (end date is in the future or today)
-                rental.setActive(!endDate.isBefore(LocalDate.now()));
+                // Check if IsActive column exists (8th column)
+                if (parts.length >= 8) {
+                    boolean isActive = Boolean.parseBoolean(parts[7].trim());
+                    rental.setActive(isActive);
+                } else {
+                    // For backward compatibility - check if rental is still active based on end date
+                    rental.setActive(!endDate.isBefore(LocalDate.now()));
+                }
                 
                 return rental;
             }
@@ -110,28 +115,28 @@ public class RentalRepository {
             }
             
             Path path = Paths.get(resource.toURI());
-            
-            List<String> lines = new ArrayList<>();
-            lines.add("ID,VehicleID,CustomerName,CustomerPhone,StartDate,EndDate,TotalCost");
+              List<String> lines = new ArrayList<>();
+            lines.add("ID,VehicleID,CustomerName,CustomerPhone,StartDate,EndDate,TotalCost,IsActive");
             
             for (Rental rental : rentals) {
-                String line = String.format("%s,%s,%s,%s,%s,%s,%.2f",
+                String line = String.format("%s,%s,%s,%s,%s,%s,%.2f,%s",
                     rental.getId(),
                     rental.getVehicleId(),
                     rental.getCustomerName(),
                     rental.getCustomerPhone(),
                     rental.getStartDate().format(DATE_FORMATTER),
                     rental.getEndDate().format(DATE_FORMATTER),
-                    rental.getTotalCost()
+                    rental.getTotalCost(),
+                    rental.isActive()
                 );
                 lines.add(line);
             }
-            
-            Files.write(path, lines);
-            System.out.println("Saved " + rentals.size() + " rentals to file");
+              Files.write(path, lines);
+            System.out.println("Saved " + rentals.size() + " rentals to file: " + path);
             
         } catch (IOException | URISyntaxException e) {
             System.err.println("Error saving rentals to file: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     

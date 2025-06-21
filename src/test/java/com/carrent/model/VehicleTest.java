@@ -6,9 +6,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for Vehicle class
- * 
- * This test class validates the Vehicle model functionality.
- * Basic tests for Phase 1, will be expanded in Phase 5.
+ *  * This test class validates the Vehicle model functionality.
+ * Basic tests for the Vehicle model with comprehensive coverage.
  * 
  * @author Car Rental Team
  * @version 1.0

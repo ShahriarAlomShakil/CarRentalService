@@ -87,8 +87,7 @@ public class VehicleRepository {
         }
         return null;
     }
-    
-    /**
+      /**
      * Save vehicles to CSV file
      */
     public void saveVehiclesToFile() {
@@ -114,12 +113,12 @@ public class VehicleRepository {
                 );
                 lines.add(line);
             }
-            
-            Files.write(path, lines);
-            System.out.println("Saved " + vehicles.size() + " vehicles to file");
+              Files.write(path, lines);
+            System.out.println("Saved " + vehicles.size() + " vehicles to file: " + path);
             
         } catch (IOException | URISyntaxException e) {
             System.err.println("Error saving vehicles to file: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     
@@ -160,8 +159,7 @@ public class VehicleRepository {
         saveVehiclesToFile();
         return true;
     }
-    
-    /**
+      /**
      * Update an existing vehicle
      * 
      * @param vehicle vehicle to update
@@ -169,16 +167,22 @@ public class VehicleRepository {
      */
     public boolean update(Vehicle vehicle) {
         if (vehicle == null) {
+            System.out.println("VehicleRepository: Cannot update null vehicle");
             return false;
         }
+        
+        System.out.println("VehicleRepository: Updating vehicle: " + vehicle.getId() + " - Available: " + vehicle.isAvailable());
         
         for (int i = 0; i < vehicles.size(); i++) {
             if (vehicles.get(i).getId().equals(vehicle.getId())) {
                 vehicles.set(i, vehicle);
+                System.out.println("VehicleRepository: Vehicle found and updated in memory");
                 saveVehiclesToFile();
+                System.out.println("VehicleRepository: Saved vehicles to file");
                 return true;
             }
         }
+        System.out.println("VehicleRepository: Vehicle not found for update: " + vehicle.getId());
         return false;
     }
     

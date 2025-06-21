@@ -30,8 +30,7 @@ public class Rental {
     public Rental() {
         this.isActive = true; // New rentals are active by default
     }
-    
-    /**
+      /**
      * Parameterized constructor
      * 
      * @param id unique identifier for the rental
@@ -43,6 +42,22 @@ public class Rental {
      */
     public Rental(String id, String vehicleId, String customerName, String customerPhone, 
                   LocalDate startDate, LocalDate endDate) {
+        this(id, vehicleId, customerName, customerPhone, startDate, endDate, true);
+    }
+    
+    /**
+     * Parameterized constructor with validation control
+     * 
+     * @param id unique identifier for the rental
+     * @param vehicleId ID of the rented vehicle
+     * @param customerName name of the customer
+     * @param customerPhone phone number of the customer
+     * @param startDate rental start date
+     * @param endDate rental end date
+     * @param validateForNewRental whether to apply new rental validation rules
+     */
+    public Rental(String id, String vehicleId, String customerName, String customerPhone, 
+                  LocalDate startDate, LocalDate endDate, boolean validateForNewRental) {
         this.id = id;
         this.vehicleId = vehicleId;
         this.customerName = customerName;
@@ -51,8 +66,8 @@ public class Rental {
         this.endDate = endDate;
         this.isActive = true;
         
-        // Validate dates
-        validateDates();
+        // Validate dates (with different rules for new vs existing rentals)
+        validateDates(validateForNewRental);
     }
     
     // Getters and Setters with proper validation
@@ -160,19 +175,28 @@ public class Rental {
         }
         this.isActive = false;
     }
-    
-    /**
+      /**
      * Validate rental dates
+     * 
+     * @param validateForNewRental whether to apply validation rules for new rentals
      */
-    private void validateDates() {
+    private void validateDates(boolean validateForNewRental) {
         if (startDate != null && endDate != null) {
             if (endDate.isBefore(startDate)) {
                 throw new IllegalArgumentException("End date cannot be before start date");
             }
-            if (startDate.isBefore(LocalDate.now())) {
+            // Only check for past start dates when creating new rentals
+            if (validateForNewRental && startDate.isBefore(LocalDate.now())) {
                 throw new IllegalArgumentException("Start date cannot be in the past");
             }
         }
+    }
+    
+    /**
+     * Validate rental dates (for backward compatibility)
+     */
+    private void validateDates() {
+        validateDates(true); // Default to new rental validation
     }
     
     /**

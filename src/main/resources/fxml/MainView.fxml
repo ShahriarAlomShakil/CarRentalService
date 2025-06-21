@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.*?>
 
 <!-- 
-    Main View FXML for Car Rental Application - Phase 3 Implementation
+    Main View FXML for Car Rental Application
     Complete UI design with TableView, forms, and buttons
 -->
 
